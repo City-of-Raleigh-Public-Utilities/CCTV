@@ -5,8 +5,13 @@ arcpy.env.overwriteOutput = True
 
 #Set connection file to SDE
 sde = os.path.join(os.path.dirname(sys.argv[0]), 'CCTV.sde')
-cctv = os.path.join(os.path.dirname(sys.argv[0]), 'CCTV.sde/RPUD.SewerCollectionNetwork')
+cctv = os.path.join(sde, 'RPUD.SewerCollectionNetwork')
+PU_Regions = os.path.join(sde, 'RPUD.PU_Regions')
+
+#Wake county data
 wake = os.path.join(os.path.dirname(sys.argv[0]), 'WAKE_READ_ONLY.sde')
+parcels = os.path.join(wake, 'WAKE.PROPERTY_A')
+streets = os.path.join(wake, 'WAKE.STREET')
 
 #Output file geodatabase
 outfile = u'\\\\corfile\Common\Public Utilities\CCTV\CCTV.gdb\SewerCollectionNetwork'
