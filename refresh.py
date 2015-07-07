@@ -6,9 +6,14 @@ arcpy.env.overwriteOutput = True
 
 #Set connection file to SDE
 cctv = os.path.join(os.path.dirname(sys.argv[0]), 'CCTV.gdb/SewerCollectionNetwork')
+wake = os.path.join(os.path.dirname(sys.argv[0]), 'WAKE_READ_ONLY.sde')
 directory = 'C:/Data'
 #Output file geodatabase
 outfile = os.path.join('C:/Data', 'CCTV.gdb/SewerCollectionNetwork')
+baseData = os.path.join('C:/Data', 'CCTV.gdb/BaseMap')
+#Checkbox argument that determines if base map features are updated
+baseMap = sys.argv[1] #true/false
+baseLayers = ['WAKE.STREET', 'WAKE.JURISDICTION', 'WAKE.PROPERTY_A']
 
 #Set workspace
 arcpy.env.workspace = cctv
@@ -27,7 +32,7 @@ def copy (fc):
 #Changes the workspace in the "CURRENT" map
 def changeWorkSpace (ws):
   desc = arcpy.Describe(ws)
-  ignore = ['WAKE.STREET', 'WAKE.JURISDICTION', 'RPUD.PU_Regions']
+
   workspaceTypes = {
         'esriDataSourcesGDB.AccessWorkspaceFactory.1': 'ACCESS_WORKSPACE',
         'esriDataSourcesGDB.FileGDBWorkspaceFactory.1': 'FILEGDB_WORKSPACE',
@@ -40,7 +45,7 @@ def changeWorkSpace (ws):
   for lyr in arcpy.mapping.ListLayers(mxd):
     if lyr.supports('dataSource') and lyr.isFeatureLayer:
       try:
-        if lyr.name not in ignore:
+        if lyr.name not in baseLayers:
           lyr.replaceDataSource(ws, wsTpye)
           arcpy.AddMessage('%s Data Source Updated' % lyr.name)
       except:
@@ -59,6 +64,25 @@ def refresh():
   if arcpy.Exists(outfile):
     for i in getArguments():
       copy(i)
+
+  #Runs if update basemap option is set to true
+  if baseMap:
+    #Creates dataset if it doesn't exist
+    if not arcpy.Exists(baseData):
+      arcpy.CreateFeatureDataset_management("C:/Data/CCTV.gdb", "BaseMap")
+
+    #Change workspace to wake read only
+    arcpy.env.workspace = wake
+    
+    #Copies feature classes to dataset
+    for b in baseLayers:
+      arcpy.AddMessage('Copying %s' % b)
+      outFeatureClass = os.path.join(baseData, b)
+      arcpy.CopyFeatures_management(b, outFeatureClass)
+
+    #Change workspace back to cctv
+    arcpy.env.workspace = cctv
+
 
   #Sets the changes the current map document to new workspace
   changeWorkSpace("C:/Data/CCTV.gdb")
